@@ -1,9 +1,10 @@
 package com.pawslink.backend.controller;
 
 import com.pawslink.backend.model.Animal;
-import com.pawslink.backend.repository.AnimalRepository;
+import com.pawslink.backend.service.AnimalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,18 +15,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnimalController {
 
-    private final AnimalRepository animalRepository;
+    private final AnimalService animalService;
 
     @GetMapping
     public List<Animal> getAllAnimals() {
-        return animalRepository.findAll();
+        return animalService.getAllAnimals();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Animal> getAnimalById(@PathVariable Long id) {
-        return animalRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Animal getAnimalById(@PathVariable Long id) {
+        return animalService.getAnimalById(id);
     }
 
     @GetMapping("/nearby")
@@ -33,36 +32,23 @@ public class AnimalController {
             @RequestParam double lat,
             @RequestParam double lon,
             @RequestParam(defaultValue = "5.0") double radiusKm) {
-        return animalRepository.findWithinRadius(lat, lon, radiusKm);
+        return animalService.getAnimalsNearby(lat, lon, radiusKm);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Animal reportAnimal(@Valid @RequestBody Animal animal) {
-        return animalRepository.save(animal);
+        return animalService.reportAnimal(animal);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Animal> updateAnimal(@PathVariable Long id, @Valid @RequestBody Animal updated) {
-        return animalRepository.findById(id)
-                .map(animal -> {
-                    animal.setName(updated.getName());
-                    animal.setSpecies(updated.getSpecies());
-                    animal.setBreed(updated.getBreed());
-                    animal.setStatus(updated.getStatus());
-                    animal.setLatitude(updated.getLatitude());
-                    animal.setLongitude(updated.getLongitude());
-                    animal.setLocationDescription(updated.getLocationDescription());
-                    return ResponseEntity.ok(animalRepository.save(animal));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public Animal updateAnimal(@PathVariable Long id, @Valid @RequestBody Animal updated) {
+        return animalService.updateAnimal(id, updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAnimal(@PathVariable Long id) {
-        if (!animalRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        animalRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAnimal(@PathVariable Long id) {
+        animalService.deleteAnimal(id);
     }
 }
