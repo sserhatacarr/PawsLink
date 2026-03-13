@@ -20,6 +20,9 @@ build/
 dist/
 node_modules/
 
+# Maven wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
 # Logs
 *.log
 logs/
